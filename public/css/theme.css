@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Playwright+GB+S:ital,wght@0,100;1,100&display=swap');
+
+body, html {
+    height: 100%;
+    margin: 0;
+    overflow: auto;
+    background: rgb(161, 187, 216);
+    font-family: 'Gill Sans Extrabold', sans-serif;
+    font-size: 20px; 
+}
+
+.navbar {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+.navbar-brand {
+    font-family: 'Gill Sans Extrabold', sans-serif;
+    color: #007bff; 
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); 
+}
+
+.nav-link {
+    font-family: 'Gill Sans Extrabold', sans-serif; 
+    color: #343a40; 
+    transition: color 0.3s ease; 
+}
+
+.nav-link:hover {
+    text-decoration: underline; 
+}
+
+h1, h2, h3 {
+    color: #0e0c0c;
+    text-align: center;
+    font-size: 30px;
+    
+}
+
+section {
+    padding: 30px 0;
+}
+
+tr:nth-child(odd) td {
+    background-color: #f0f8ff;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ccc;
+}
+
+th {
+    color: rgb(14, 11, 11);
+}
+
+ol, ul {
+    margin: 20px;
+    padding-left: 20px;
+
+}
+
+li {
+    margin: 5px 0; 
+}
+
+figure {
+    text-align: center;
+    margin: 20px 0;
+}
+
+img {
+    max-width: 70%;
+    height: auto;
+    border-radius: 8px; 
+}
+
+audio, video {
+    display: block;
+    margin: 20px auto;
+}
+
+button {
+    background-color: #007bff; 
+    color: rgb(12, 10, 10);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3; 
+}
+
+p {
+    color: #050404; 
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 0 20px; 
+}
+
+a {
+    color: #ffdd57; 
+    text-decoration: none; 
+}
+
+a:hover {
+    text-decoration: underline; 
+}
