@@ -8,7 +8,7 @@
 *
 * Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 1st November 2024
 *
-* Published URL: 
+* Published URL: https://newsite-one-lilac.vercel.app/about
 *
 ********************************************************************************/
 
@@ -28,17 +28,44 @@ legoData.initialize().then(() => {
   console.log("Unable to start the server: ", err);
 });
 
-app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.static(__dirname + '/public'));
 
-
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views/home.html"));
+  res.render('home');
 });
 
 app.get("/about", (req, res) => {
-  res.sendFile(path.join(__dirname, "/views/about.html"));
+  res.render('about');
+});
+
+
+app.get("/lego/addset", async(req, res) => {
+  try {
+    const themes = await legoData.getAllThemes();
+    res.render('addset', {themes:themes});
+  } catch (err){
+    res.status(400).send(`Error fetching themes: ${err}`);
+  }
+});
+
+app.post("/lego/addset", async (req, res) => {
+  try {
+    let foundTheme = await legoData.getThemeById(req.body.theme_id);
+    if (!foundTheme) {
+      res.status(400).send("Theme not found");
+      return;
+    }
+
+    req.body.theme = foundTheme.name;
+    await legoData.addSet(req.body);
+
+    res.redirect("/lego/sets");
+  } catch (err) {
+    res.status(500).send(`Error adding set: ${err.message}`);
+  }
 });
 
 app.get("/lego/sets", (req, res) => {
@@ -46,11 +73,15 @@ app.get("/lego/sets", (req, res) => {
 
   if (theme) {
     legoData.getSetsByTheme(theme)
-      .then((sets) => res.json(sets))
+      .then((sets) => {
+        res.render('sets', { sets: sets });
+      })
       .catch((err) => res.status(404).send(err));
   } else {
     legoData.getAllSets()
-      .then((sets) => res.json(sets))
+      .then((sets) => {
+        res.render('sets', { sets: sets });
+      })
       .catch((err) => res.status(404).send(err));
   }
 });
@@ -59,33 +90,20 @@ app.get("/lego/sets/:set_num", (req, res) => {
   const setNum = req.params.set_num;
 
   legoData.getSetByNum(setNum)
-    .then((set) => res.json(set))
+    .then((set) => res.render('setDetails', { set: set }))
     .catch((err) => res.status(404).send(err));
 });
 
-app.get("/lego/add-test", (req, res) => {
-  let testSet = {
-      set_num: "123",
-      name: "testSet name",
-      year: "2024",
-      theme_id: "366",
-      num_parts: "123",
-      img_url: "https://fakeimg.pl/375x375?text=[+Lego+]"
-  };
-
-  legoData.addSet(testSet)
-      .then(() => {
-          // Redirect to the sets page if successful
-          res.redirect("/lego/sets");
-      })
-      .catch((err) => {
-          // Set status code to 422 and return the error
-          res.status(422).send(err);
-      });
+app.get("/lego/deleteSet/:set_num", async (req, res) => {
+  try {
+    const setNum = req.params.set_num;
+    await legoData.deleteSetByNum(setNum); 
+    res.redirect("/lego/sets"); 
+  } catch (err) {
+    res.status(404).send(`Error deleting set: ${err.message}`);
+  }
 });
-
 
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "/views/404.html"));
+  res.status(404).render('404'); 
 });
-

@@ -8,7 +8,7 @@
 *
 * Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 1st November 2024
 *
-* Published URL: 
+* Published URL: https://newsite-one-lilac.vercel.app/about
 *
 ********************************************************************************/
 
@@ -16,11 +16,25 @@ class LegoData {
 
     constructor() {
         this.sets = []
+        this.themes = []
     }
+
+        async deleteSetByNum(setNum) {
+            const foundSetIndex = this.sets.findIndex(s => s.set_num == setNum);
+        
+            if (foundSetIndex !== -1) {
+              this.sets.splice(foundSetIndex, 1);
+              return; 
+            } else {
+              
+              throw new Error("Set not found");
+    }
+}    
+
 
     addSet(newSet) {
         return new Promise((resolve, reject) => {
-            // Check if set_num already exists
+         
             const exists = this.sets.some(set => set.set_num === newSet.set_num);
             if (exists) {
                 reject("Set already exists");
@@ -37,7 +51,8 @@ class LegoData {
         return new Promise((resolve, reject) => {
             const setData = require("../data/setData");
             const themeData = require("../data/themeData");
-            
+            this.themes = [...themeData];
+
     
             setData.forEach((el) => {
                 const theme = themeData.find(themeel => themeel.id === el.theme_id)
@@ -62,6 +77,11 @@ class LegoData {
         })
     }
 
+    getAllThemes() {
+        return new Promise((resolve, reject) => {
+            resolve(this.themes)
+        })
+    }
     getSetByNum(setNum) {
         return new Promise((resolve, reject) => {
             const nSet = this.sets.find(set => set.set_num === setNum);
@@ -69,6 +89,17 @@ class LegoData {
                 resolve(nSet);
             } else {
                 reject("unable to find requested set");
+            }
+        });
+    }
+
+    getThemeById(id) {
+        return new Promise((resolve, reject) => {
+            const nthemes = this.themes.find(themes => themes.id === id);
+            if (nthemes) {
+                resolve(nthemes);
+            } else {
+                reject(new Error("unable to find requested themes"));
             }
         });
     }
@@ -85,8 +116,8 @@ class LegoData {
             }
         });
     }
-}
 
+}
 let data = new LegoData();  
 
 data.initialize().then(() => {
