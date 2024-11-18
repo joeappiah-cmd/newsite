@@ -16,9 +16,14 @@ const express = require("express");
 const path = require("path");
 const LegoData = require("./modules/legoSets");
 
+
+
 const app = express();
 const HTTP_PORT = process.env.PORT || 8083;
 const legoData = new LegoData();
+
+app.use(express.urlencoded({ extended: true })); 
+
 
 legoData.initialize().then(() => {
   app.listen(HTTP_PORT, () => {
@@ -64,7 +69,7 @@ app.post("/lego/addset", async (req, res) => {
 
     res.redirect("/lego/sets");
   } catch (err) {
-    res.status(500).send(`Error adding set: ${err.message}`);
+    res.status(400).send(`Error adding set: ${err.message}`);
   }
 });
 
@@ -73,14 +78,14 @@ app.get("/lego/sets", (req, res) => {
 
   if (theme) {
     legoData.getSetsByTheme(theme)
-      .then((sets) => {
-        res.render('sets', { sets: sets });
+      .then((setfiltered) => {
+        res.render("sets", { sets: setfiltered });
       })
       .catch((err) => res.status(404).send(err));
   } else {
     legoData.getAllSets()
-      .then((sets) => {
-        res.render('sets', { sets: sets });
+      .then((allsets) => {
+        res.render("sets", { sets: allsets });
       })
       .catch((err) => res.status(404).send(err));
   }
@@ -90,9 +95,16 @@ app.get("/lego/sets/:set_num", (req, res) => {
   const setNum = req.params.set_num;
 
   legoData.getSetByNum(setNum)
-    .then((set) => res.render('setDetails', { set: set }))
-    .catch((err) => res.status(404).send(err));
+    .then((legoSet) => {
+      console.log(legoSet); 
+      res.render('set', { set: legoSet });
+    })
+    .catch((err) => {
+      console.error(err); 
+      res.status(404).send(err);
+    });
 });
+
 
 app.get("/lego/deleteSet/:set_num", async (req, res) => {
   try {
