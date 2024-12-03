@@ -1,12 +1,12 @@
 /********************************************************************************
-* WEB700 – Assignment 04
+* WEB700 – Assignment 06
 *
 * I declare that this assignment is my own work in accordance with Seneca's
 * Academic Integrity Policy:
 *
 * https://www.senecapolytechnic.ca/about/policies/academic-integrity-policy.html
 *
-* Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 1st November 2024
+* Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 4th December 2024
 *
 * Published URL: https://newsite-one-lilac.vercel.app/about
 *
@@ -56,20 +56,38 @@ app.get("/lego/addset", async(req, res) => {
   }
 });
 
-app.post("/lego/addset", async (req, res) => {
+// app.post("/lego/addset", async (req, res) => {
+//   try {
+//     let foundTheme = await legoData.getThemeById(req.body.theme_id);
+//     if (!foundTheme) {
+//       res.status(400).send("Theme not found");
+//       return;
+//     }
+
+//     req.body.theme = foundTheme.name;
+//     await legoData.addSet(req.body);
+
+//     res.redirect("/lego/sets");
+//   } catch (err) {
+//     res.status(400).send(`Error adding set: ${err.message}`);
+//   }
+// });
+
+app.post('/lego/addSet', async (req, res) => {
   try {
-    let foundTheme = await legoData.getThemeById(req.body.theme_id);
-    if (!foundTheme) {
-      res.status(400).send("Theme not found");
-      return;
-    }
-
-    req.body.theme = foundTheme.name;
-    await legoData.addSet(req.body);
-
-    res.redirect("/lego/sets");
+    const newSet = {
+      set_num: req.body.set_num,
+      name: req.body.name,
+      year: req.body.year,
+      num_parts: req.body.num_parts,
+      img_url: req.body.img_url,
+      theme_id: req.body.theme_id,
+    };
+    await legoData.addSet(newSet);
+    res.redirect('/lego/sets');
   } catch (err) {
-    res.status(400).send(`Error adding set: ${err.message}`);
+    console.error(err);
+    res.status(500).render("500", { message: err });
   }
 });
 
@@ -87,7 +105,7 @@ app.get("/lego/sets", (req, res) => {
       .then((allsets) => {
         res.render("sets", { sets: allsets });
       })
-      .catch((err) => res.status(404).send(err));
+      .catch((err) => res.status(500).send("Error getting the set"));
   }
 });
 

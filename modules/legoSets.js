@@ -1,137 +1,167 @@
-/********************************************************************************
-* WEB700 – Assignment 04
-*
-* I declare that this assignment is my own work in accordance with Seneca's
-* Academic Integrity Policy:
-*
-* https://www.senecapolytechnic.ca/about/policies/academic-integrity-policy.html
-*
-* Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 1st November 2024
-*
-* Published URL: https://newsite-one-lilac.vercel.app/about
-*
-********************************************************************************/
+
+require('dotenv').config();
+require('pg');
+const Sequelize = require('sequelize');
 
 class LegoData {
-
+    sequelize;
+    Set;
+    Theme;
+ 
     constructor() {
-        this.sets = []
-        this.themes = []
+        this.sequelize = new Sequelize(
+            process.env.PGDATABASE,
+            process.env.PGUSER,
+            process.env.PGPASSWORD,
+            {
+                host: process.env.PGHOST,
+                dialect: 'postgres',
+                port: 5432,
+                dialectOptions: {
+                    ssl: {
+                        require: true,
+                        rejectUnauthorized: false,
+                    },
+                },
+            }
+        );
+ 
+        this.sequelize
+            .authenticate()
+            .then(() => console.log('Connection has been established successfully.'))
+            .catch((err) => console.error('Unable to connect to the database:', err)); 
+       
+ 
+        this.Theme = this.sequelize.define(
+            'Theme',
+            {
+                id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+                name: { type: Sequelize.STRING },
+            },
+            { timestamps: false }
+        );
+ 
+        this.Set = this.sequelize.define(
+            'Set',
+            {
+                set_num: { type: Sequelize.STRING, primaryKey: true, unique: true, allowNull: false},
+                name: { type: Sequelize.STRING },
+                year: { type: Sequelize.INTEGER },
+                num_parts: { type: Sequelize.INTEGER },
+                theme_id: { type: Sequelize.INTEGER },
+                img_url: { type: Sequelize.STRING },
+            },
+            { timestamps: false }
+        );
+ 
+        this.Set.belongsTo(this.Theme, { foreignKey: 'theme_id' });
     }
-
-        async deleteSetByNum(setNum) {
-            const foundSetIndex = this.sets.findIndex(s => s.set_num == setNum);
-        
-            if (foundSetIndex !== -1) {
-              this.sets.splice(foundSetIndex, 1);
-              return; 
-            } else {
-              
-              throw new Error("Set not found");
+ 
+    initialize() {
+        return this.sequelize.sync();
     }
-}    
-
-
+ 
     addSet(newSet) {
         return new Promise((resolve, reject) => {
-         
-            const exists = this.sets.some(set => set.set_num === newSet.set_num);
-            if (exists) {
-                reject("Set already exists");
-            } else {
-                this.sets.push(newSet);
-                resolve(); 
-            }
+            this.Set.findOne({ where: { set_num: newSet.set_num } })
+                .then(existingSet => {
+                    if (existingSet) {
+                        reject("Set already exists");
+                        return;
+                    }
+   
+                    this.Set.create(newSet)
+                        .then(() => {
+                            resolve();
+                        })
+                        .catch((err) => {
+                            reject(err.errors[0].message);
+                        });
+                })
+                .catch((err) => {
+                    reject(err.message);
+                });
         });
     }
-
-
-    initialize() {
-
-        return new Promise((resolve, reject) => {
-            const setData = require("../data/setData");
-            const themeData = require("../data/themeData");
-            this.themes = [...themeData];
-
-    
-            setData.forEach((el) => {
-                const theme = themeData.find(themeel => themeel.id === el.theme_id)
-                let themeName;
-    
-                if (theme) {
-                    themeName = theme.name
-                } else {
-                    themeName = " "
-                }
-    
-                el.theme = themeName
-                this.sets.push(el)
-            });
-            resolve()
-        })
-    }
-
-    getAllSets() {
-        return new Promise((resolve, reject) => {
-            resolve(this.sets)
-        })
-    }
-
+   
+   
+ 
     getAllThemes() {
         return new Promise((resolve, reject) => {
-            resolve(this.themes)
-        })
+            this.Theme.findAll()
+                .then((themes) => {
+                    resolve(themes);
+                })
+                .catch((err) => {
+                    reject(err);  
+                });
+        });
     }
+ 
+    getAllSets() {
+        return new Promise((resolve, reject) => {
+            this.Set.findAll({
+                include: [this.Theme],
+            })
+                .then((sets) => {
+                    if (sets.length > 0) {
+                        resolve(sets);
+                    } else {
+                        reject('Set requested is unavailable');
+                    }
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        });
+    }
+ 
     getSetByNum(setNum) {
         return new Promise((resolve, reject) => {
-            const nSet = this.sets.find(set => set.set_num === setNum);
-            if (nSet) {
-                resolve(nSet);
-            } else {
-                reject("unable to find requested set");
-            }
+            this.Set.findAll({
+                include: [this.Theme],
+                where: { set_num: setNum },
+            })
+                .then((sets) => {
+                    if (sets.length > 0) {
+                        resolve(sets[0]);
+                    } else {
+                        reject('Unable to find requested set');
+                    }
+                })
+                .catch((error) => {
+                    reject(error);
+                });
         });
     }
-
-    getThemeById(id) {
-        return new Promise((resolve, reject) => {
-            const nthemes = this.themes.find(themes => themes.id === id);
-            if (nthemes) {
-                resolve(nthemes);
-            } else {
-                reject(new Error("unable to find requested themes"));
-            }
-        });
-    }
-
+ 
     getSetsByTheme(theme) {
         return new Promise((resolve, reject) => {
-            const nSet = this.sets.filter(set =>
-                set.theme.toLowerCase().includes(theme.toLowerCase())
-            );
-            if (nSet.length > 0) {
-                resolve(nSet);
-            } else {
-                reject("unable to find requested set");
-            }
+            this.Set.findAll({
+                include: [this.Theme],
+                where: {
+                    '$Theme.name$': {
+                        [Sequelize.Op.iLike]: `%${theme}%`,
+                    },
+                },
+            })
+                .then((sets) => {
+                    if (sets.length > 0) {
+                        resolve(sets);
+                    } else {
+                        reject('Unable to find requested sets');
+                    }
+                })
+                .catch((error) => {
+                    reject(error);
+                });
         });
     }
-
+    deleteSetByNum(setNum) {
+        return this.Set.destroy({
+            where: { set_num: setNum }
+        });
+    }
 }
-let data = new LegoData();  
-
-data.initialize().then(() => {
-    return data.getAllSets();
-}).then((sets) => {
-    console.log(`Number of Sets: ${sets.length}`);
-    return data.getSetByNum("0012-1");
-}).then((set) => {
-    console.log(set);
-    return data.getSetsByTheme('tech');
-}).then((theme) => {
-    console.log(`Number of 'tech' sets: ${theme.length}`);
-}).catch((err) => {
-    console.error("Error:", err);
-});
-
+ 
 module.exports = LegoData;
