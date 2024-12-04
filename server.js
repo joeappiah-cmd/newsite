@@ -8,7 +8,7 @@
 *
 * Name: Augustine Appiah Bamfo  Student ID: 131215238 Date: 4th December 2024
 *
-* Published URL: https://newsite-one-lilac.vercel.app/about
+* Published URL: https://newsite2-delta.vercel.app/
 *
 ********************************************************************************/
 
